@@ -6,13 +6,10 @@ from rpy2.robjects.packages import importr
 import pandas as pd
 from rpy2.robjects import pandas2ri
 
-PATH = "C:/Users/user/Desktop/R&S_coPaper/Simulation/"
-PATH_HOLTWINTERS = "C:/Users/user/Desktop/R&S_coPaper/HoltWinters3H/"
-PATH_ARIMA = "C:/Users/user/Desktop/R&S_coPaper/Arima3H/"
-PATH_FILTERING = "C:/Users/user/Desktop/R&S_coPaper/Filtering/"
-PATH_SHORT_HOLTWINTERS = "C:/Users/user/Desktop/R&S_coPaper/SHORT_HoltWinters3H/"
-PATH_SHORT_ARIMA = "C:/Users/user/Desktop/R&S_coPaper/SHORT_Arima3H/"
-
+PATH = "./inputData"
+PATH_HOLTWINTERS = "./HoltWinters3H/"
+PATH_ARIMA = "./Arima3H/"
+PATH_FILTERING = "./Filtering/"
 """ install & import R packages  """
 try:
     utils = importr('utils')
@@ -85,13 +82,10 @@ def forecast(data, select):
     return forecastDF
 
 def allFiles(path):
-    df = pd.DataFrame()
-
-    for root, dirs, files in os.walk(path):
-        rootpath = os.path.join(os.path.abspath(path), root)
-        df[rootpath] = files
-
-    return df
+    files = os.listdir(path)
+    for i in range(0, len(files)):
+        files[i] = PATH + '/' + files[i]
+    return files
 
 def makeDir(dirName):
     if not os.path.isdir(dirName):
@@ -100,87 +94,40 @@ def makeDir(dirName):
 def init():
     makeDir(PATH_HOLTWINTERS)
     makeDir(PATH_ARIMA)
-    makeDir(PATH_SHORT_HOLTWINTERS)
-    makeDir(PATH_SHORT_ARIMA)
 
 def write_HW_Result(fList):
-        for dir in fList.columns[1: ]:
+        for dir in fList:
             dirName = dir.split('/')[-1]
             outDir = os.path.join(PATH_HOLTWINTERS, dirName)
-            makeDir(outDir)
+            data = read_SimData(dir)
 
-            for file in fList[dir]:
-                readPath = os.path.join(dir, file)
-                data = read_SimData(readPath)
-
-                for i in range(1, len(data.index) + 1):
-                    outFileName = outDir + '/' + file.split('.')[0] + "_pred_" + str(i) + ".txt"
-                    init = data.index[0:i].values
-                    estimation = forecast(init, PRED_HOLTW)
-                    np.savetxt(outFileName, estimation, fmt='%d', delimiter=",\t",
-                               header="mean,lower80,lower95,upper80,upper95")
+            for i in range(1, len(data.index) + 1):
+                outFileName = outDir + "_in_" + str(i) + ".txt"
+                init = data.index[0:i].values
+                estimation = forecast(init, PRED_HOLTW)
+                np.savetxt(outFileName, estimation, fmt='%d', delimiter=",\t",
+                            header="mean,lower80,lower95,upper80,upper95")
 
 def write_ARIMA_Result(fList):
-        for dir in fList.columns[1: ]:
+        for dir in fList:
             dirName = dir.split('/')[-1]
             outDir = os.path.join(PATH_ARIMA, dirName)
-            makeDir(outDir)
+            data = read_SimData(dir)
 
-            for file in fList[dir]:
-                readPath = os.path.join(dir, file)
-                data = read_SimData(readPath)
-
-                for i in range(1, len(data.index) + 1):
-                    outFileName = outDir + '/' + file.split('.')[0] + "_pred_" + str(i) + ".txt"
-                    init = data.index[0:i].values
-                    estimation = forecast(init, PRED_ARIMA)
-                    np.savetxt(outFileName, estimation, fmt='%d', delimiter=",\t",
-                               header="mean,lower80,lower95,upper80,upper95")
-
-def write_HW_MinInput_Result(fList):
-        for dir in fList.columns[1: ]:
-            dirName = dir.split('/')[-1]
-            outDir = os.path.join(PATH_SHORT_HOLTWINTERS, dirName)
-            makeDir(outDir)
-
-            for file in fList[dir]:
-                readPath = os.path.join(dir, file)
-                data = read_SimData(readPath)
-
-                for i in range(0, len(data.index)-7):
-                    outFileName = outDir + '/' + file.split('.')[0] + "_pred_" + str(i+8) + ".txt"
-                    init = data.index[i: i+8].values
-                    estimation = forecast(init, PRED_HOLTW)
-                    np.savetxt(outFileName, estimation, fmt='%d', delimiter=",\t",
-                               header="mean,lower80,lower95,upper80,upper95")
-
-
-def write_Arima_MinInput_Result(fList):
-    for dir in fList.columns[1:]:
-        dirName = dir.split('/')[-1]
-        outDir = os.path.join(PATH_SHORT_ARIMA, dirName)
-        makeDir(outDir)
-
-        for file in fList[dir]:
-            readPath = os.path.join(dir, file)
-            data = read_SimData(readPath)
-
-            for i in range(0, len(data.index) - 7):
-                outFileName = outDir + '/' + file.split('.')[0] + "_pred_" + str(i+8) + ".txt"
-                init = data.index[i: i+8].values
+            for i in range(1, len(data.index) + 1):
+                outFileName = outDir + "_in_" + str(i) + ".txt"
+                init = data.index[0:i].values
                 estimation = forecast(init, PRED_ARIMA)
                 np.savetxt(outFileName, estimation, fmt='%d', delimiter=",\t",
-                           header="mean,lower80,lower95,upper80,upper95")
+                            header="mean,lower80,lower95,upper80,upper95")
+
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
 """ M A I N code is in here """
 init()
 pandas2ri.activate()
 fList = allFiles(PATH)
-print("HW MININPUT")
-write_HW_MinInput_Result(fList)
-print("ARIMA MININPUT")
-write_Arima_MinInput_Result(fList)
+
 print("HOLTWINTERS")
 write_HW_Result(fList)
 print("ARIMA")
