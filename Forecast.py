@@ -24,7 +24,7 @@ PRED_ARIMA = """
     
         library(forecast)
         input <- as.numeric(input)
-        input <- ts(input,frequency=4)
+        input <- ts(input,frequency=37)
         
         tryCatch(
         {
@@ -45,7 +45,7 @@ PRED_HOLTW = """
         
         library(forecast)
         input <- as.numeric(input)
-        input <- ts(input, frequency=4)
+        input <- ts(input, frequency=12)
         
         tryCatch(
         {
@@ -100,10 +100,11 @@ def write_HW_Result(fList):
             dirName = dir.split('/')[-1]
             outDir = os.path.join(PATH_HOLTWINTERS, dirName)
             data = read_SimData(dir)
-
-            for i in range(1, len(data.index) + 1):
+            print(len(data.index))
+            for i in range(9251, len(data.index) + 1):
                 outFileName = outDir + "_in_" + str(i) + ".txt"
                 init = data.index[0:i].values
+                print(init)
                 estimation = forecast(init, PRED_HOLTW)
                 np.savetxt(outFileName, estimation, fmt='%d', delimiter=",\t",
                             header="mean,lower80,lower95,upper80,upper95")
@@ -114,9 +115,10 @@ def write_ARIMA_Result(fList):
             outDir = os.path.join(PATH_ARIMA, dirName)
             data = read_SimData(dir)
 
-            for i in range(1, len(data.index) + 1):
+            for i in range(9251, len(data.index) + 1):
                 outFileName = outDir + "_in_" + str(i) + ".txt"
                 init = data.index[0:i].values
+                print(init)
                 estimation = forecast(init, PRED_ARIMA)
                 np.savetxt(outFileName, estimation, fmt='%d', delimiter=",\t",
                             header="mean,lower80,lower95,upper80,upper95")
@@ -128,8 +130,8 @@ init()
 pandas2ri.activate()
 fList = allFiles(PATH)
 
-print("HOLTWINTERS")
-write_HW_Result(fList)
+#print("HOLTWINTERS")
+#write_HW_Result(fList)
 print("ARIMA")
 write_ARIMA_Result(fList)
 

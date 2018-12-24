@@ -4,10 +4,10 @@ import numpy as np
 import random
 
 PATH = "./inputData"
-PATH_HOLTWINTERS = "./HoltWinters3H_110205/"
-PATH_ARIMA = "./Arima3H_110205/"
-PATH_FILTERING = "./Filtering/"
-SAMPLING_SIZE=1000
+PATH_HOLTWINTERS = "./HoltWinters3H_freq37"
+PATH_ARIMA = "./Arima3H_freq37"
+PATH_FILTERING = "./Filtering_freq37/"
+SAMPLING_SIZE=100000
 est_Type = [PATH_ARIMA, PATH_HOLTWINTERS]
 
 lower = [[0]*4 for i in range(12)]
@@ -17,20 +17,16 @@ def makeDir(dirName):
     if not os.path.isdir(dirName):
         os.mkdir(dirName)
 
-def getDateList(path):
-    date = os.listdir(path)
-    return date
-
-def makeFileName(date, time):
-    name = date + "_in_" + str(time) + ".txt"
+def makeFileName(time):
+    name = "training.txt_in_" + str(time) + ".txt"
     return name
 
 def r4Values(file):
     for i in  range(0, len(est_Type) ) :
         read = est_Type[i] + '/' + file
-
+        print(read)
         list = pd.read_csv(read)
-
+		
         for j in range(0,len(list.values)):
             for k in range(1,3):
                 if(np.isnan(list.values[j][k]) == True):
@@ -89,26 +85,24 @@ def getMean(reSample):
 
 def process():
     makeDir(PATH_FILTERING)
-    dates = os.listdir(PATH)
-    for date in dates:
-        for time in range(1,231):
-            fileName = makeFileName(date, time)
-            oName = os.path.join(PATH_FILTERING, fileName)
-            output = open(oName, 'w')
-            r4Values(fileName)
-            for i in range(0,12):
-                filtered = []
-                for j in range(0,4):
-                    tmp = filtering(lower[i][j], upper[i][j])
-                    filtered += tmp
+    for time in range(9251,9287):
+        fileName = makeFileName(time)
+        oName = os.path.join(PATH_FILTERING, fileName)
+        output = open(oName, 'w')
+        r4Values(fileName)
+        for i in range(0,12):
+            filtered = []
+            for j in range(0,4):
+                tmp = filtering(lower[i][j], upper[i][j])
+                filtered += tmp
 
-                if(len(filtered) == 0):
-                    res = 0
-                else:
-                    res = int(round(getMean(filtered)))
+            if(len(filtered) == 0):
+                res = 0
+            else:
+                res = int(round(getMean(filtered)))
 
-                output.write(str(res) + "\n")
-            output.close()
+            output.write(str(res) + "\n")
+        output.close()
 
 
 process()
